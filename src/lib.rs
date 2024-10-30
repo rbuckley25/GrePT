@@ -2,7 +2,7 @@ use std::fs;
 use std::error::Error;
 use std::env;
 
-pub fn run(config: Config) -> Result<(), Box<dyn Error>>{
+/* pub fn old_run(config: Config) -> Result<(), Box<dyn Error>>{
     let contents = fs::read_to_string(config.file_path)?;
 
     let results = if config.ignore_case {
@@ -16,12 +16,26 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>>{
     }
 
     Ok(())
+} */
+
+pub fn run(config: Config) -> Result<(), Box<dyn Error>>{
+    let files = std::fs::read_dir(&config.dir_path)?;
+
+    for file_path in files{
+        let file_name =  file_path.unwrap().file_name().into_string().unwrap();
+        println!("{dir_path}/{file}",file=file_name,dir_path=config.dir_path);
+    }
+    
+    Ok(())
 }
+
+
+/// Input config struct
 
 pub struct Config {
     pub query: String,
-    pub file_path: String,
-    pub ignore_case: bool,
+    pub dir_path: String,
+    pub api_key: String,
 }
 
 impl Config{
@@ -31,13 +45,16 @@ impl Config{
         }
 
         let query = args[1].clone();
-        let file_path = args[2].clone();
+        let dir_path = args[2].clone();
 
-        let ignore_case = env::var("IGNORE_CASE").is_ok();
+        let api_key = env::var("API_KEY").unwrap();
 
-        Ok(Config {query,file_path,ignore_case,})
+        Ok(Config {query,dir_path,api_key,})
     }
 }
+
+
+/// Text Search functions
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut results = Vec::new();
@@ -62,6 +79,8 @@ pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a st
     results
 }
 
+/// Tests
+
 #[cfg (test)]
 mod tests {
     use super::*;
@@ -76,7 +95,6 @@ Pick three.";
 
         assert_eq!(vec!["safe, fast, productive."], search(query, contents));
     }
-
 
 
 
